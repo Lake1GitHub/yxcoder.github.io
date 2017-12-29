@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" >
+    <style>
+        *{ outline: 0; margin: 0; padding: 0; }
+        .Box{ margin: 300px auto; width: 700px; }
+        .tips{ margin-left: 110px; color: grey; display: none; }
+        #count{ border-radius: 5px; }
+        label[for^='count']{ display: inline-block; width: 100px; }
+        .checkBtn{ box-sizing: border-box; background-color: blue; border: 0; color: white; width: 80px; height: 40px; cursor: pointer; border-radius: 4px; font-size: 18px; vertical-align: middle; }
+        input{ box-sizing: border-box; width: 300px; margin: 10px 10px; height: 40px; vertical-align: middle; padding-left: 5px; font-size: 14px; border: 1px solid black; }
+    </style>
+    <script>
+    function $(ele){
+        return document.querySelector(ele);
+    }
+    function addevent(ele, handle, fn){
+        if(ele.addEventListener){
+            ele.addEventListener(handle, fn, false);
+        } else if(ele.attachEvent){
+            ele.attachEvent('on'+handle, fn);
+        } else {
+            ele['on'+handle] = fn;
+        }
+    }
+    </script>
+</head>
+<body>
+<div class="Box">
+    <form>
+        <div>
+          <div>
+            <label for="count1">名称</label><input id="count1" placeholder="字符数为4~16位"/>
+          </div>
+          <div id="tips-count1" class="tips">必填，长度为4~16个字符</div>
+        </div>
+        <div>
+          <div>
+            <label for="count2">密码</label><input id="count2" type="password" placeholder="字符数为4~16位"/>
+          </div>
+          <div id="tips-count2" class="tips">必填，长度为4~16个字符</div>
+        </div>
+        <div>
+          <div>
+            <label for="count3">密码确认</label><input id="count3" type="password" placeholder="字符数为4~16位"/>
+          </div>
+          <div id="tips-count3" class="tips">再次输入相同密码</div>
+        </div>
+        <div>
+          <div>
+            <label for="count4">邮箱</label><input id="count4" placeholder="请输入邮箱"/>
+          </div>
+          <div id="tips-count4" class="tips">必填，请输入邮箱</div>
+        </div>
+        <div>
+          <div>
+            <label for="count5">手机</label><input id="count5" placeholder="请输入电话号码"/>
+          </div>
+          <div id="tips-count5" class="tips">必填，请输入手机号码</div>
+        </div>
+        <input type="button" id="checkBtn" class="checkBtn" value="验证"/>
+    </form>
+</div>
+<script>
+    var inputIndex = $(".Box form").children;
+    var inputCount = inputIndex.length - 1;
+    var results = {};
+    var Observer = (function(){
+      var __messages = {};
+      return {
+        regist: function(type, fn){
+          if(typeof __messages[type] === 'undefined'){
+            __messages[type] = [fn];
+          } else {
+            __messages[type].push(fn);
+          }
+        },
+        fire: function(type, args){
+          if(!__messages[type]){
+            return;
+          }
+          var events = {
+            type : type,
+            args : args || {}
+          },
+          i = 0,
+          len = __messages[type].length;
+          for(; i < len; i++){
+            var result = __messages[type][i].call(this, events);
+            results[type] = result;
+          }
+        },
+        remove: function(type, fn){
+          if(__messages[type] instanceof Array){
+            var i = __messages[type].length - 1;
+            for(; i >= 0; i--){
+              __messages[type][i] === fn && __messages[type].splice(i, 1);
+            }
+          }
+        }
+      }
+    })();
+    var inputCheck = {
+        el: undefined,
+        pass: true,
+        init: function(){
+          if(!this.el){
+              throw "el is not define";
+          }
+        },
+        bind: function(el){
+            this.el = document.querySelector(el);
+            return this;
+        },
+        checkEmpty: function(){
+          this.init();
+          if(this.pass !== true){
+            return this;
+          }
+          var len = this.el.value.length;
+          if(!len) this.pass = 'empty';
+          return this;
+        },
+        checkLength: function(min, max){
+            this.init();
+            if(this.pass !== true){
+              return this;
+            }
+            min = min||4;
+            max = max||16;
+            var len = 0;
+            var el = this.el;
+            var val = el.value;
+            for( var i = 0; i<val.length; i++ ){
+                if(val[i].charCodeAt(0)>128){
+                    len++;
+                }
+                len++;
+            }
+            if(len>max||len<min){
+                if(len===0){
+                  this.pass = 'empty';
+                  return this;
+                }
+                this.pass = false;
+                return this;
+            }
+            return this;
+        },
+        checkSame: function(oldValue, newValue){
+          this.init();
+          if(this.pass !== true){
+            return this;
+          }
+          if(oldValue && newValue){
+            if(oldValue === newValue){
+              return this;
+            }
+          }
+          this.pass = 'notSame';
+          return this;
+        },
+        checkEmail: function(email){
+          this.init();
+          var check = /^([\w_-])+@([\w_-])+(.[\w_-])+/;
+          var result = check.test(email);
+          if(!result){
+            this.pass = 'false';
+          }
+          return this;
+        },
+        checkPhone: function(phoneNumber){
+          this.init();
+          var check = /^1[3|4|5|8][0-9]\d{4,8}$/;
+          var result = check.test(phoneNumber);
+          if(!result){
+            this.pass = 'false';
+          }
+          return this;
+        },
+        over: function(){
+          var pass = this.pass;
+          this.pass = true;
+          return pass;
+        }
+    };
+    for( var i = 1; i <= inputCount; i++){
+      (function(i){
+        addevent($('#count'+i),'focus', function(){
+          $('#tips-count'+i).style.display = 'block';
+        });
+      })(i)
+    };
+    function displayBlock(el){
+      if(!el){
+          throw "el is not define";
+      }
+      $(el).style.display = 'block';
+    }
+    Observer.regist('blurCount1', function(){
+      displayBlock('#tips-count'+1);
+      var check = inputCheck.bind('#count'+1).checkLength().over();
+      var tips = $('#tips-count'+1);
+      var count = $('#count'+1);
+      if(check === true){
+          count.style.borderColor = 'green';
+          tips.style.color = 'green';
+          tips.innerHTML = '格式正确';
+          return true;
+      } else{
+          count.style.borderColor = 'red';
+          tips.style.color = 'red';
+          if(check === 'empty'){
+              tips.innerHTML = '姓名不能为空';
+          } else{
+              tips.innerHTML = '格式错误';
+          }
+          return false;
+      }
+    });
+    Observer.regist('blurCount2', function(){
+      displayBlock('#tips-count'+2);
+      var check = inputCheck.bind('#count'+2).checkLength().over();
+      var tips = $('#tips-count'+2);
+      var count = $('#count'+2);
+      if(check === true){
+          count.style.borderColor = 'green';
+          tips.style.color = 'green';
+          tips.innerHTML = '格式正确';
+          return true;
+      } else{
+          count.style.borderColor = 'red';
+          tips.style.color = 'red';
+          if(check === 'empty'){
+              tips.innerHTML = '密码不能为空';
+          } else{
+              tips.innerHTML = '格式错误';
+          }
+          return false;
+      }
+    });
+    Observer.regist('blurCount3', function(){
+      displayBlock('#tips-count'+3);
+      var oldValue = $('#count2').value;
+      var newValue = $('#count3').value;
+      var check = inputCheck.bind('#count'+3).checkLength().checkSame(oldValue, newValue).over();
+      var tips = $('#tips-count'+3);
+      var count = $('#count'+3);
+      if(check === true){
+          count.style.borderColor = 'green';
+          tips.style.color = 'green';
+          tips.innerHTML = '密码输入一致';
+          return true;
+      } else{
+          count.style.borderColor = 'red';
+          tips.style.color = 'red';
+          tips.innerHTML = '密码输入不一致';
+          return false
+      }
+    });
+    Observer.regist('blurCount4', function(){
+      displayBlock('#tips-count'+4);
+      var email = $('#count4').value;
+      var check = inputCheck.bind('#count'+4).checkEmail(email).over();
+      var tips = $('#tips-count'+4);
+      var count = $('#count'+4);
+      if(check === true){
+          count.style.borderColor = 'green';
+          tips.style.color = 'green';
+          tips.innerHTML = '邮箱格式正确';
+          return true;
+      } else{
+          count.style.borderColor = 'red';
+          tips.style.color = 'red';
+          tips.innerHTML = '邮箱格式错误';
+          return false;
+      }
+    });
+    Observer.regist('blurCount5', function(){
+      displayBlock('#tips-count'+5);
+      var phoneNumber = $("#count5").value;
+      var check = inputCheck.bind('#count'+5).checkLength().checkPhone(phoneNumber).over();
+      var tips = $('#tips-count'+5);
+      var count = $('#count'+5);
+      if(check === true){
+          count.style.borderColor = 'green';
+          tips.style.color = 'green';
+          tips.innerHTML = '手机号码格式正确';
+          return true;
+      } else{
+          count.style.borderColor = 'red';
+          tips.style.color = 'red';
+          tips.innerHTML = '手机号码格式错误';
+          return false;
+      }
+    });
+
+    addevent($('#count'+1),'blur', function(){
+      Observer.fire('blurCount1');
+    });
+    addevent($('#count'+2),'blur', function(){
+      Observer.fire('blurCount2');
+    });
+    addevent($('#count'+3),'blur', function(){
+      Observer.fire('blurCount3');
+    });
+    addevent($('#count'+4), 'blur', function(){
+      Observer.fire('blurCount4');
+    });
+    addevent($('#count'+5), 'blur', function(){
+      Observer.fire('blurCount5');
+    });
+    addevent($('#checkBtn'), 'click', function(){
+      Observer.fire('blurCount1');
+      Observer.fire('blurCount2');
+      Observer.fire('blurCount3');
+      Observer.fire('blurCount4');
+      Observer.fire('blurCount5');
+      ob1 = results['blurCount1'];
+      ob2 = results['blurCount2'];
+      ob3 = results['blurCount3'];
+      ob4 = results['blurCount4'];
+      ob5 = results['blurCount5'];
+      if(!(ob1 && ob2 && ob3 && ob4 && ob5)){
+        alert('输入有误');
+      }
+      else {
+        alert('YES!');
+      }
+    })
+
+</script>
+</body>
+</html>

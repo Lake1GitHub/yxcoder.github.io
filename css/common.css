@@ -1,0 +1,12 @@
+.wrap{
+    width: 960px;
+    position: relative;
+    margin: auto;
+    text-align: center;
+}
+.left{
+    float: left;
+}
+.right{
+    float: right;
+}

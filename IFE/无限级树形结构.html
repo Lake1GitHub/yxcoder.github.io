@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <style>
+        span{
+            display: inline-block;
+        }
+        .container-box{
+            width: 600px;
+            margin: 0 auto;
+        }
+        .rightTriangle{  /* 右指向箭头 */
+            width: 0;
+            height: 0;
+            border-right: none;
+            border-top: transparent 8px solid;
+            border-bottom: transparent 8px solid;
+            border-left: red 16px solid;
+        }
+        .bottomTriangle{  /* 下指向箭头 */
+            width: 0;
+            height: 0;
+            border-bottom: none;
+            border-left: transparent 8px solid;
+            border-right: transparent 8px solid;
+            border-top: red 16px solid;
+        }
+        .spriteAdd{
+            display: inline-block;
+        }
+        .spriteDel{
+            display: inline-block;
+        }
+        .heightLight{
+            color: red;
+        }
+        .unHeightLight{
+            color: black;
+        }
+        .hidden{
+            display: none;
+        }
+        .show{
+            display: block;
+        }
+        .node{
+            margin: 30px;
+        }
+        img{
+            width: 15px;
+        }
+        label{
+            position: relative;
+        }
+        img{
+            vertical-align: middle;
+        }
+        .del{
+            left: 10px;
+            cursor: pointer;
+        }
+        .add{
+            cursor: pointer;
+        }
+        .data{
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-box">
+        <div>
+            <input class="name" placeholder="节点名称"/>
+            <button class="search">查找结点</button>
+        </div>
+        <div class="node show">
+            <span class="arrow bottomTriangle"></span>
+            <span class="data unHeightLight">DOTA2</span>
+            <label class="add">
+                <img src="images/add.png"/>
+            </label>
+            <label class="del">
+                <img src="images/cut.png"/>
+            </label>
+        </div>
+    </div>
+    <script>
+    function $(ele, v){
+        if(!v){
+            return document.querySelector(ele);
+        } else{
+            return v.querySelector(ele);
+        }
+    }
+    function addevent(ele, event, handle){
+        if(ele.addEventListener){
+            ele.addEventListener(event, handle, false);
+        } else if(ele.attachEvent){
+            ele.attachEvent('on'+event, handle);
+        } else{
+            ele['on'+event] = handle;
+        }
+    }
+    var treeNode = function( node ){
+        this.parent = node.parent||null;
+        this.childs = node.childs||[];
+        this.data = node.data||"";
+        this.element = node.element;
+    };
+    treeNode.prototype= {
+        constructor: treeNode,
+        render: function( cArrow, cVisibility, cHeightLight ){
+            var ele = this.element;
+            var arrow = $('.arrow', ele);
+            var data = $('.data', ele);
+            if(cArrow){
+                if( $('.node', ele)===null||this.childs.length===0 ){
+                    arrow.style.display = 'none';
+                }
+                else if(cArrow===!!cArrow){
+                    if( arrow.className.indexOf('rightTriangle') !== -1){
+                        arrow.style.display = 'inline-block';
+                        arrow.className = 'arrow bottomTriangle';
+                    }else if( arrow.className.indexOf('bottomTriangle') !== -1){
+                        arrow.style.display = 'inline-block';
+                        arrow.className = 'arrow rightTriangle';
+                    }
+                }
+                else if(cArrow==='bottom'){
+                    arrow.style.display = 'inline-block';
+                    arrow.className = 'arrow bottomTriangle';
+                }
+                else if(cArrow==='right'){
+                    arrow.style.display = 'inline-block';
+                    arrow.className = 'arrow rightTriangle';
+                }
+            }
+            if(cVisibility){
+                if( ele.className.indexOf('hidden')!==-1||cVisibility==='show' ){
+                    ele.className = 'node show';
+                } else if( ele.className.indexOf('show')!==-1||cVisibility==='hidden' ){
+                    ele.className = 'node hidden';
+                } else{
+                    throw('cVisibility error');
+                }
+            }
+            if(cHeightLight){
+                if( data.className.indexOf('heightLight')!==-1||cHeightLight==='unHeightLight' ){
+                    data.className = 'data unHeightLight';
+                } else if( data.className.indexOf('unHeightLight')!==-1||cHeightList==='heightLight' ){
+                    data.className = 'data heightLight';
+                } else{
+                    throw('cHeightLight error');
+                }
+            }
+        },
+        add: function( value ){
+            if(!value){
+                return;
+            }
+            var div = document.createElement('div');
+            var arrow = document.createElement('span');
+            var data = document.createElement('span');
+            var add = document.createElement('label');
+            var del = document.createElement('label');
+            var addImg = document.createElement('img');
+            var delImg = document.createElement('img');
+            div.className = 'node show';
+            arrow.className = 'arrow rightTriangle';
+            data.className = 'data unHeightLight';
+            data.innerText = value;
+            add.className = 'add';
+            del.className = 'del';
+            addImg.src = 'images/add.png';
+            delImg.src = 'images/cut.png';
+            this.element.appendChild(div);
+            div.appendChild(arrow);
+            div.appendChild(data);
+            div.appendChild(add);
+            div.appendChild(del);
+            add.appendChild(addImg);
+            del.appendChild(delImg);
+            var that = new treeNode({ parent: this, data: value, element: div });
+            this.childs.push(that);
+
+            this.render('bottom', 'show', 'unHeightLight');
+            for(var i = 0; i<this.childs.length; i++){
+                this.childs[i].render('right', 'show', 'unHeightLight');
+            }
+            that.render('right', 'show', 'unHeightLight');
+
+            addevent($('.add', that.element), 'click', function(){
+                that.add(prompt('请输入要添加的名称'));
+            });
+            addevent($('.del', that.element), 'click', function(){
+                that.del();
+            });
+            addevent($('.arrow', that.element), 'click', function(){
+                that.toggleFold();
+            });
+            return this;
+        },
+        del: function(){
+            var i;
+            for( i=0; i<this.childs.length; i++){
+                this.childs[i].del();
+            }
+            this.element.parentNode.removeChild(this.element);//删除视图
+            for( i=0; i<this.parent.childs.length; i++ ){     //删除数据
+                if(this.parent.childs[i]===this){
+                    this.parent.childs.splice(i,1);
+                    break;
+                }
+            }
+            this.parent.render('bottom', 'show', 'unHeightLight');
+        },
+        isFold: function(){
+            return (this.element.className.indexOf('show')===-1)
+        },
+        toggleFold: function( value ){
+            if(this.childs.length===0) return this;
+            for(var i=0; i<this.childs.length; i++){
+                this.childs[i].render(false, true, false);
+            }
+            this.render(true, false, false);
+            return this;
+        }
+    };
+    function PreorderTravel(node, fn){
+        if(node){
+            fn(node);
+        } else{
+            return;
+        }
+        if(node.childs){
+            for(var i = 0; i < node.childs.length; i++){
+                PreorderTravel(node.childs[i], fn);
+            }
+        }
+    }
+    var root = new treeNode({ parent: null, element: $('.node'), data: 'DOTA2'});
+    root.add('China').add('USA').add('EU');
+    root.childs[0].add('Wings').add('Ehome').add('IG').add('NewBee').add('VG').add('LGD').toggleFold();
+    root.childs[0].childs[2].add('Burning').add('Op').add('XXS').add('BoBoKa').add('Q').toggleFold();
+    root.childs[0].childs[2].render('right', 'hidden', false);
+    root.childs[1].add('EG').toggleFold();
+    root.childs[2].add('Liquid').toggleFold();
+    root.render('bottom', 'show', false);
+    addevent($('.add', root.element), 'click', function(){
+        root.add(prompt('请输入要添加节点的名称'));
+    });
+    addevent($('.arrow', root.element), 'click', function(){
+        root.toggleFold();
+    });
+    addevent($('.search'), 'click', function(){
+        var value = $('.name').value;
+        PreorderTravel(root, function(node){
+            var template = node.parent;
+            if(node.data===value){
+                while(template){
+                    for( var i=0; i<template.childs.length; i++ ){
+                        if(template.childs[i].element.getAttribute('route')!=='route'){
+                            template.childs[i].render('right', 'show', false);
+                        }
+                    }
+                    template.element.setAttribute('route', 'route');
+                    template.render('bottom', 'show', false);
+                    template = template.parent;
+                }
+                node.render('bottom', 'show', true);
+            }
+        });
+    });
+</script>
+</body>
+</html>

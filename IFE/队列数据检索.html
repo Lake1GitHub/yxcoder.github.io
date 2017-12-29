@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IFE</title>
+    <meta charset="UTF-8" />
+    <style>
+        #ele { vertical-align: middle; line-height: 50px; white-space: nowrap; }
+        #ele > span{ display: inline-block; width: 100px; height: 50px; background-color: red; font-size: 36px; text-align: center; color: white; margin: 10px;}
+        .select { display: inline-block; background-color: green; font-size: 36px; text-align: center; color: white; }
+    </style>
+</head>
+<body>
+<textarea id="input" placeholder="输入数据"></textarea>&nbsp;<button id="lIn">左侧入</button><button id="rIn">右侧入</button>&nbsp;<button id="lOut">左侧出</button><button id="rOut">右侧出</button>
+&nbsp;<input id="search" placeholder="检索数据"/>&nbsp;<button id="btnSearch">检索</button>
+<div id="ele">
+
+</div><br />
+<script>
+
+    var getEle ={
+        getId: function(){
+            for(var i = 0; i < arguments.length; i++){
+                if(!this[arguments[i]]){
+                    this[arguments[i]] = document.getElementById(arguments[i]);
+                }
+            }
+            return this;
+        }
+    };
+
+    function eventListener(ele, event, handle){
+        if(ele.addEventListener){
+            ele.addEventListener(event, handle, false);
+        } else if (ele.attachEvent){
+            ele.attachEvent('on' + event, handle);
+        } else{
+            ele['on'+event] = handle;
+        }
+    }
+    var Queue = {
+        queue: [],
+        templateQueue: [],
+        popEle: undefined,
+        leftIn: function( num ){
+            this.queue.unshift( num );
+            this.show();
+        },
+        rightIn: function( num ){
+            this.queue.push( num );
+            this.show();
+        },
+        leftOut: function(){
+            if(this.queue.length === 0){
+                return '队列为空，无法出列';
+            }
+            this.popEle = this.queue.shift();
+            this.show();
+            return '出列元素为:' + this.popEle;
+        },
+        rightOut: function(){
+            if(this.queue.length === 0){
+                return '队列为空，无法出列';
+            }
+            this.popEle = this.queue.pop();
+            this.show();
+            return '出列元素为:' + this.popEle;
+        },
+        show: function( element ){
+            this.templateQueue = JSON.parse(JSON.stringify(this.queue));
+            if( element!==undefined ){
+                this.templateQueue = this.templateQueue.map(function(e){
+                    e = e.replace(new RegExp(element, 'g'), "<span class='select'>" + element + "</span>");
+                    return e;
+                });
+            }
+            getEle.ele.innerHTML = '';
+
+            for(var i = 0; i < this.templateQueue.length; i++){
+                getEle.ele.innerHTML += '<span>' + this.templateQueue[i] + '</span>';
+            }
+        }
+    };
+
+    (function(){
+        getEle.getId('lIn').getId('rIn').getId('lOut').getId('rOut').getId('input').getId('search').getId('btnSearch').getId('ele');
+        eventListener(getEle.lIn, 'click', function(){
+            var value = getEle.input.value.trim().split(/[^0-9a-zA-Z\u4e00-\u9fa5]+/);
+            for( var i=0; i<value.length; i++ ){
+                if( value[i] ){
+                    Queue.leftIn( value[i] );
+                } else{
+                    alert('input valid!');
+                }
+            }
+            getEle.input.value = '';
+        });
+        eventListener(getEle.rIn, 'click', function(){
+            var value = getEle.input.value.trim().split(/[^0-9a-zA-Z\u4e00-\u9fa5]+/);
+            for( var i=0; i<value.length; i++ ){
+                if( value[i] ){
+                    Queue.rightIn( value[i] );
+                } else{
+                    alert('input valid!');
+                }
+            }
+            getEle.input.value = '';
+        });
+        eventListener(getEle.lOut, 'click', function(){
+            alert(Queue.leftOut());
+        });
+        eventListener(getEle.rOut, 'click', function(){
+            alert(Queue.rightOut());
+        });
+        eventListener(getEle.btnSearch, 'click', function(){
+            var search = getEle.search.value.trim();
+            Queue.show(search);
+        })
+    })();
+</script>
+</body>
+</html>

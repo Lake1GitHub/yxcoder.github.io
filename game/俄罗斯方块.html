@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <style>
+
+    </style>
+</head>
+<body>
+
+<script>
+    function $(el){
+        return document.querySelector(el);
+    }
+    function addEvent(ele, handle, fn){
+        if(ele.addEventListener){
+            ele.addEventListener(handle, fn, false);
+        } else{
+            ele.attachEvent('on' + handle, fn);
+        }
+    }
+    'use strict';
+    let block = {
+        gamePanel: [
+            [-1, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -1],
+            [-1, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -1],
+            [-1, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -1],
+            [-1, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -1],
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //4
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //5
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //6
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //7
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //8
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //9
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //10
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //11
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //12
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //13
+            [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        ],
+        currentBlock: {
+            shape: 'I',
+            state: 1,
+            posX: 0,
+            posY: 0,
+        },
+        speed: 1,
+        score: 0,
+        move(direct){
+            if(direct === 'up'){
+                this.change();
+            } else{
+                if(direct === 'left'){
+                    this.currentBlock.posX--;
+                    if(this.validate())
+                        this.render();
+                } else if(direct === 'right'){
+                    this.currentBlock.posX++;
+                    if(this.validate())
+                        this.render();
+                } else if(direct === 'bottom'){
+                    this.currentBlock.posY++;
+                    if(this.validate())
+                        this.render();
+                }
+            }
+        },
+        validate(){
+            let
+                panel = this.gamePanel,
+                block1 = this.getBlockDetail()['b1'],
+                block2 = this.getBlockDetail()['b2'],
+                block3 = this.getBlockDetail()['b3'],
+                block4 = this.getBlockDetail()['b4'];
+            // 如果有一个 block所在的点不为 0，则验证不通过
+            return !(panel[block1.x][block1.y] || panel[block2.x][block2.y] || panel[block3.x][block3.y] || panel[block4.x][block4.y]);
+        },
+        getBlockDetail(){
+            let block = this.currentBlock,
+                block1 = { x: block.posX, y: block.posY },
+                str = JSON.stringify(block1),
+                block2 = JSON.parse(str),
+                block3 = JSON.parse(str),
+                block4 = JSON.parse(str),
+                shape = block.shape,
+                state = block.state;
+            // 各种不同形状的处理
+            if(shape==='S'){
+                if(state===1){
+                    block1.y++;
+                    block2.y++;
+                    block2.x++;
+                    block3.x+=2;
+                    block4.x+=3;
+                }
+                else{
+                    block2.y++;
+                    block3.x++;
+                    block3.y+=2;
+                    block4.x++;
+                    block4.y+=3;
+                }
+            }
+            else if(shape==='Z'){
+                if(state===1){
+                    block2.x++;
+                    block3.x+=2;
+                    block3.y++;
+                    block4.x+=3;
+                    block4.y++;
+                } else{
+                    block1.x++;
+                    block2.x++;
+                    block2.y++;
+                    block3.y+=2;
+                    block4.y+=3;
+                }
+            }
+            else if( shape=== 'I'){
+                if(state===1){
+                    block2.y++;
+                    block3.y+=2;
+                    block4.y+=3;
+                } else {
+                    block.x++;
+                    block.x+=2;
+                    block.x+=3;
+                }
+            } else if(shape==='O'){
+                block2.x++;
+                block3.y++;
+                block4.x++;
+                block4.y++;
+            } else if(shape==='L'){
+                if(state===1){
+                    block2.y++;
+                    block3.y += 2;
+                    block4.x++;
+                    block4.y += 2;
+                }else if(state===2){
+                    block2.y++;
+                    block3.x++;
+                    block4.x+=2;
+                }else if(state===3){
+                    block2.x++;
+                    block3.x++;
+                    block3.y++;
+                    block4.x++;
+                    block4.y+=2;
+                }else{
+                    block1.y++;
+                    block2.x++;
+                    block2.y++;
+                    block3.x+=2;
+                    block4.x+=2;
+                    block4.y++;
+                }
+            } else if(shape==='J'){
+                if(state===1){
+                    block1.x++;
+                    block2.x++;
+                    block2.y++;
+                    block3.x++;
+                    block3.y+=2;
+                    block4.y+=2;
+                } else if(state===2){
+                    block2.x++;
+                    block3.x+=2;
+                    block4.x+=2;
+                    block4.y++;
+                } else if(state===3){
+                    block2.x++;
+                    block3.y++;
+                    block4.y+=2;
+                } else{
+                    block2.y++;
+                    block3.x++;
+                    block3.y++;
+                    block4.y++;
+                    block4.x+=2;
+                }
+            } else{
+                if(state===1){
+                    block1.x++;
+                    block2.y++;
+                    block3.x++;
+                    block3.y++;
+                    block4.x+=2;
+                    block4.y++;
+                } else if(state===2){
+                    block2.y++;
+                    block3.x++;
+                    block3.y++;
+                    block4.y+=2;
+                } else if(state===3){
+                    block2.x++;
+                    block3.x+=2;
+                    block4.x++;
+                    block4.y++;
+                } else{
+                    block1.x++;
+                    block2.x++;
+                    block2.y++;
+                    block3.y++;
+                    block4.x++;
+                    block4.y+=2;
+                }
+            }
+            return {
+                'b1': block1,
+                'b2': block2,
+                'b3': block3,
+                'b4': block4
+            }
+        },
+        nextTick(){
+            let
+                block1 = this.getBlockDetail()['b1'],
+                block2 = this.getBlockDetail()['b2'],
+                block3 = this.getBlockDetail()['b3'],
+                block4 = this.getBlockDetail()['b4'];
+            if(panel[block1.x][block1.y++] || panel[block2.x][block2.y++] || panel[block3.x][block3.y++] || panel[block4.x][block4.y++]){
+                this.eliminate();
+                this.createBlock();
+            }
+            this.render();
+            setTimeout(this.nextTick(), 1000/this.speed);
+        },
+        createBlock(){
+
+        },
+        eliminate(){
+            let record;
+            for(let i = 13; i>=4; i--){
+                let isFull = true;
+                for(let j = 1; j<=10; j++){
+                    if(this.gamePanel[i][j]===0){
+                        isFull = false;
+                        break;
+                    }
+                }
+                if(isFull){
+                    let count = 1;
+                    let continuous = true;
+                    record = i;
+                    for(let i = record; i>=record-4; i--){
+                        for(let j = 1; j<=10; j++){
+                            count++;
+                            if(this.gamePanel[i][j]===0){
+                                count--;
+                                continuous= false;
+                                break;
+                            }
+                        }
+                        if(!continuous)
+                            break;
+                    }
+                    
+                }
+            }
+        },
+        change(){
+            let
+                shape = this.currentBlock.shape,
+                state = this.currentBlock.state;
+            if(shape==='S'||shape==='Z'||shape==='I'){
+                this.currentBlock.shape = state%2+1;
+            } else{
+                this.currentBlock.shape = state%4+1;
+            }
+        },
+        render(){
+
+        }
+    };
+    addEvent(window, 'keydown', function(event){
+        if(event.key === 'ArrowUp'){
+            block.move('up');
+        } else if(event.key === 'ArrowDown'){
+            block.move('down');
+        } else if(event.key === 'ArrowLeft'){
+            block.move('left');
+        } else if(event.key === 'ArrowRight'){
+            block.move('right');
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        div{
+            background-color: white;
+        }
+        .block-1{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid black;
+            height: 300px;
+            width: 1100px;
+            margin: 100px auto;
+        }
+        .block-2{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid black;
+            height: 250px;
+            width: 500px;
+            margin: 100px auto;
+        }
+        .block-3{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid black;
+            height: 200px;
+            width: 200px;
+            margin: 100px auto;
+        }
+        .block-4{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid black;
+            height: 150px;
+            width: 60px;
+            margin: 100px auto;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="reset();PreorderTravel(node);show(nodeList);">先序</button>
+    <button onclick="reset();InorderTravel(node);show(nodeList);">中序</button>
+    <button onclick="reset();PostorderTravel(node);show(nodeList);">后序</button>
+<div class="block-1">
+    <div class="block-2">
+        <div class="block-3">
+            <div class="block-4">
+            </div>
+            <div class="block-4">
+            </div>
+        </div>
+        <div class="block-3">
+            <div class="block-4">
+            </div>
+            <div class="block-4">
+            </div>
+        </div>
+    </div>
+    <div class="block-2">
+        <div class="block-3">
+            <div class="block-4">
+            </div>
+            <div class="block-4">
+            </div>
+        </div>
+        <div class="block-3">
+            <div class="block-4">
+            </div>
+            <div class="block-4">
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    /**
+    * 和前几名的代码对比了下，感觉不是很简洁，setinterval 比 settimeout 用起来要方便一点
+    * 为了传参，使用了 package 一定程度上也加重了代码复杂度，降低了可读性
+    * */
+    var node = document.getElementsByClassName('block-1')[0];
+    var nodeList = [];
+    var handle = [];
+    function PreorderTravel( node ){
+        nodeList.push(node);
+        if(node.firstElementChild){
+            PreorderTravel(node.firstElementChild);
+        }
+        if(node.lastElementChild){
+            PreorderTravel(node.lastElementChild);
+        }
+    }
+    function InorderTravel( node ){
+        if(node.firstElementChild){
+            InorderTravel(node.firstElementChild);
+        }
+        nodeList.push(node);
+        if(node.lastElementChild){
+            InorderTravel(node.lastElementChild);
+        }
+    }
+    function PostorderTravel( node ){
+        if(node.firstElementChild){
+            PostorderTravel(node.firstElementChild);
+        }
+        if(node.lastElementChild){
+            PostorderTravel(node.lastElementChild);
+        }
+        nodeList.push(node);
+    }
+    function show(arr){
+        for(var i = 0; i<arr.length; i++ ){
+            if(!arr){
+                throw('arr is undefined at line 110');
+            }
+            handle[i] = setTimeout(package(function(){
+                arguments[0].style.backgroundColor = 'blue';
+                if( arguments[1]>0 ){
+                    arr[arguments[1]-1].style.backgroundColor = 'white';
+                }
+                if( arguments[1] === arguments[2].length ){
+                    arr[arguments[1]].style.backgroundColor = 'white';
+                }
+            }, arr[i],i,arr), i * 1000);
+        }
+    }
+    function package(){
+        var fn = arguments[0];
+        Array.prototype.shift.call(arguments);
+        var argu = arguments;
+        return function(){
+            fn.apply(fn, argu);
+        }
+    }
+    function reset(){
+        var div = document.getElementsByTagName('div');
+        for(var i=0; i<nodeList.length; i++){
+            clearTimeout(handle[i]);
+        }
+        nodeList = [];
+        handle = [];
+        for( var i=0; i<div.length; i++ ){
+            div[i].style.backgroundColor = 'white';
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <style>
+        div{
+            background-color:white;
+        }
+
+        .container-box{
+            display:flex;
+            justify-content:center;
+            margin-top:100px;
+        }
+        [class^='block']{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border:1px solid black;
+            margin: 12px 12px;
+            padding: 3px;
+        }
+        #search{
+            margin: 0 50px;
+            width:200px;
+        }
+    </style>
+</head>
+<body>
+<button id='preTravel'>先根遍历</button>
+<button id='postTravel'>后根遍历</button>
+<input id="search" placeholder="请输入序号"/>
+<button id="seek">查找</button>
+<button id="add">添加</button>
+<button id="delete">删除</button>
+<div class="container-box">
+    <div class="block-1">
+        1
+        <div class="block-2">
+            2
+            <div class="block-3">
+                3
+                <div class="block-4">
+                    4
+                </div>
+                <div class="block-4">
+                    5
+                </div>
+                <div class="block-4">
+                    6
+                </div>
+            </div>
+            <div class="block-3">
+                7
+                <div class="block-4">
+                    8
+                </div>
+            </div>
+            <div class="block-3">
+                9
+                <div class="block-4">
+                    10
+                </div>
+                <div class="block-4">
+                    11
+                </div>
+            </div>
+        </div>
+        <div class="block-2">
+            12
+            <div class="block-3">
+                13
+                <div class="block-4">
+                    14
+                </div>
+            </div>
+            <div class="block-3">
+                15
+                <div class="block-4">
+                    16
+                </div>
+                <div class="block-4">
+                    17
+                </div>
+                <div class="block-4">
+                    18
+                </div>
+                <div class="block-4">
+                    19
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    /**
+     * 更改了实现方法，确实好用很多 ^。^
+     * */
+    var node = document.getElementsByClassName('block-1')[0];
+    var nodeList = [];
+    var handle;
+    var clickNode;
+    function $(ele){
+        return document.querySelector(ele);
+    }
+    function $all(ele){
+        return document.querySelectorAll(ele);
+    }
+    function addeventlistener(ele, handle, fn){
+        if(ele.addEventListener){
+            ele.addEventListener(handle, fn, false);
+        }else if(ele.attachEvent){
+            ele.attachEvent('on' + handle, fn);
+        }else{
+            ele['on' + handle] = fn;
+        }
+    }
+    function stopBubble(event){
+        if(event.stopPropagation){
+            event.stopPropagation();
+        } else if(event.cancelBubble){
+            event.cancelBubble();
+        } else if(event.stopImmediatePropagation){
+            event.stopImmediatePropagation();
+        }
+    }
+    addeventlistener($('#preTravel'), 'click', function(){
+        reset();
+        PreorderTravel(node);
+        show(nodeList);
+    });
+    addeventlistener($('#postTravel'), 'click', function(){
+        reset();
+        InorderTravel(node);
+        show(nodeList);
+    });
+    addeventlistener($('#seek'), 'click', function(){
+        var value = $('#search').value;
+        var data = null;
+        reset();
+        PreorderTravel(node, function(Node){
+            data = Node.childNodes[0].data.replace(/\s/g, '');
+            if( data === value ){
+                Node.style.backgroundColor = 'yellow';
+                clickNode = Node;
+            }
+        });
+    });
+    addeventlistener($('#delete'), 'click', function(){
+        if(clickNode){
+            Delete(clickNode);
+            clickNode = undefined;
+        } else {
+            alert('请选中要删除的节点');
+        }
+    });
+    addeventlistener($('#add'), 'click', function(){
+        var Node = clickNode;
+        var value = $('#search').value;
+        var num;
+        if( value === '')
+            alert('请输入要添加的节点序号');
+        else if( Node ){
+            var style = Node.className;
+            var newNode = document.createElement('div');
+            num = parseInt(style.split('-')[1])+1;
+            newNode.innerHTML = value;
+            newNode.className = 'block-' + num;
+            Node.appendChild(newNode);
+            init();
+        } else {
+            alert('请选择要添加节点的位置');
+        }
+    });
+
+    function init(){
+        var block = $all('.container-box div');
+        var data = null;
+        for(var i = 0; i<block.length; i++){
+            addeventlistener(block[i], 'click', function(event){
+                stopBubble(event);//阻止事件冒泡传播
+                reset();
+                data = this.childNodes[0].data.replace(/\s/g, '');
+                this.style.backgroundColor = 'yellow';
+                clickNode = this;
+            });
+        }
+    }
+    function Delete( Node ){
+        Node.parentNode.removeChild(Node);
+    }
+    function PreorderTravel(node, fn){
+        var templateNode;
+        if(node){
+            templateNode = node.firstElementChild;
+        }
+        if(typeof fn === 'function'){
+            fn(node);
+        } else {
+            nodeList.push(node);//访问根
+        }
+        while(templateNode){
+            PreorderTravel(templateNode, fn);
+            templateNode = templateNode.nextElementSibling;
+        }
+    }
+    function InorderTravel(node, fn){
+        var templateNode;
+        if(node){
+            templateNode = node.firstElementChild;
+        }
+        else return;
+        while(templateNode){
+            InorderTravel(templateNode, fn);
+            templateNode = templateNode.nextElementSibling;
+        }
+        if(typeof fn === 'function'){
+            fn(node);
+        } else{
+            nodeList.push(node);//访问根
+        }
+    }
+    function show(arr, value){
+        var i = 0;
+        var tag = arr[i].innerText.split(/\s/)[0];
+        arr[i].style.backgroundColor = 'blue';
+        if(value === tag){
+            arr[i].style.backgroundColor = 'yellow';
+        }
+        handle = setInterval(function(){
+            i++;
+            if(i < arr.length){
+                if(arr[i - 1].style.backgroundColor !== 'yellow'){
+                    arr[i - 1].style.backgroundColor = 'white';
+                }
+                arr[i].style.backgroundColor = 'blue';
+                tag = arr[i].innerText.split(/\s/)[0];
+                if(value === tag){
+                    arr[i].style.backgroundColor = 'yellow';
+                }
+            }else{
+                clearInterval(handle);
+                if(arr[i - 1].style.backgroundColor !== 'yellow'){
+                    arr[i - 1].style.backgroundColor = 'white';
+                }
+            }
+        }, 1000);
+    }
+    function reset(){
+        var div = document.getElementsByTagName('div');
+        nodeList = [];
+        clearInterval(handle);
+        for(var i = 0; i < div.length; i++){
+            div[i].style.backgroundColor = 'white';
+        }
+    }
+    init();
+    PreorderTravel(node);
+</script>
+</body>
+</html>

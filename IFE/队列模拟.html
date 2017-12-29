@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IFE</title>
+    <meta charset="UTF-8" />
+    <style>
+        #ele { vertical-align: middle; line-height: 50px; }
+        #ele span{ display: inline-block; width: 100px; height: 50px; background-color: red; font-size: 36px; text-align: center; color: white; margin: 10px;}
+    </style>
+</head>
+<body>
+<input id="input" placeholder="输入数据" />&nbsp;<button id="lIn">左侧入</button><button id="rIn">右侧入</button>&nbsp;<button id="lOut">左侧出</button><button id="rOut">右侧出</button>
+<div id="ele">
+
+</div><br />
+<script>
+
+    var getEle ={
+        getId: function(){
+            for(var i = 0; i < arguments.length; i++){
+                if(!this[arguments[i]]){
+                    this[arguments[i]] = document.getElementById(arguments[i]);
+                }
+            }
+            return this;
+        }
+    };
+
+    function eventListener(ele, event, handle){
+        if(ele.addEventListener){
+            ele.addEventListener(event, handle, false);
+        } else if (ele.attachEvent){
+            ele.attachEvent('on' + event, handle);
+        } else{
+            ele['on'+event] = handle;
+        }
+    }
+    var Queue = {
+        queue: [],
+        popEle: undefined,
+        leftIn: function( num ){
+            this.queue.unshift( num );
+            this.show();
+        },
+        rightIn: function( num ){
+            this.queue.push( num );
+            this.show();
+        },
+        leftOut: function(){
+            if(this.queue.length === 0){
+                return '队列为空，无法出列';
+            }
+            this.popEle = this.queue.shift();
+            this.show();
+            return '出列元素为:' + this.popEle;
+        },
+        rightOut: function(){
+            if(this.queue.length === 0){
+                return '队列为空，无法出列';
+            }
+            this.popEle = this.queue.pop();
+            this.show();
+            return '出列元素为:' + this.popEle;
+        },
+        show: function(){
+            getEle.getId('ele');
+            getEle.ele.innerHTML = '';
+            for( var i=0; i<this.queue.length; i++ ){
+                getEle.ele.innerHTML += '<span>' + this.queue[i] + '</span>';
+            }
+        }
+    };
+
+    (function(){
+        getEle.getId('lIn').getId('rIn').getId('lOut').getId('rOut').getId('input');
+        eventListener(getEle.lIn, 'click', function(){
+            var value = parseFloat(getEle.input.value);
+            if( value ){
+                Queue.leftIn( value );
+                getEle.input.value = '';
+            } else{
+                alert('input valid!');
+            }
+        });
+        eventListener(getEle.rIn, 'click', function(){
+            var value = parseFloat(getEle.input.value);
+            if( value ){
+                Queue.rightIn( value );
+                getEle.input.value = '';
+            } else{
+                alert('input valid!');
+            }
+        });
+        eventListener(getEle.lOut, 'click', function(){
+            alert(Queue.leftOut());
+        });
+        eventListener(getEle.rOut, 'click', function(){
+            alert(Queue.rightOut());
+        });
+    })();
+</script>
+</body>
+</html>

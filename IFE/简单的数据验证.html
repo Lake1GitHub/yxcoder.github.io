@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" >
+    <style>
+        *{ outline: 0; margin: 0; padding: 0; }
+        .Box{ margin: 300px auto; width: 500px; }
+        .tips{ margin-left: 45px; color: grey; }
+        #count{ border-radius: 5px; }
+        .checkBtn{ box-sizing: border-box; background-color: blue; border: 0; color: white; width: 80px; height: 40px; cursor: pointer; border-radius: 4px; font-size: 18px; vertical-align: middle; }
+        input{ box-sizing: border-box; width: 300px; margin: 10px 10px; height: 40px; vertical-align: middle; padding-left: 5px; font-size: 14px; border: 1px solid black;}
+    </style>
+</head>
+<body>
+<div class="Box">
+    <form>
+        <label for="count">名称</label><input id="count" placeholder="字符数为4~16位"/><input type="button" id="checkBtn" class="checkBtn" value="验证">
+        <div id="tips-count" class="tips">必填，长度为4~16个字符</div>
+    </form>
+</div>
+<script>
+    function $(ele){
+        return document.querySelector(ele);
+    }
+    function addevent(ele, handle, fn){
+        if(ele.addEventListener){
+            ele.addEventListener(handle, fn, false);
+        } else if(ele.attachEvent){
+            ele.attachEvent('on'+handle, fn);
+        } else {
+            ele['on'+handle] = fn;
+        }
+    }
+    var inputCheck = {
+        el: undefined,
+        init: function(el){
+            this.el = document.querySelector(el);
+            return this;
+        },
+        onlyNum: function(min, max){
+            if(!this.el){
+                throw "el is not define";
+            }
+            min = min||4;
+            max = max||16;
+            var len = 0;
+            var el = this.el;
+            var val = el.value;
+            for( var i = 0; i<val.length; i++ ){
+                if(val[i].charCodeAt(0)>128){
+                    len++;
+                }
+                len++;
+            }
+            if(len>max||len<min){
+                if(len===0) return 'empty';
+                return false;
+            }
+            return true;
+        }
+    };
+    addevent($('#checkBtn'), 'click', function(){
+        var check = inputCheck.init('#count').onlyNum();
+        var tips = $('#tips-count');
+        var count = $('#count');
+        if(check === true){
+            count.style.borderColor = 'green';
+            tips.style.color = 'green';
+            tips.innerHTML = '格式正确';
+        } else{
+            count.style.borderColor = 'red';
+            tips.style.color = 'red';
+            if(check === 'empty'){
+                tips.innerHTML = '姓名不能为空';
+            } else{
+                tips.innerHTML = '格式错误';
+            }
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        div{
+            background-color: white;
+        }
+        .block-1{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid black;
+            height: 300px;
+            width: 1100px;
+            margin: 100px auto;
+        }
+        .block-2{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid black;
+            height: 250px;
+            width: 500px;
+            margin: 100px auto;
+        }
+        .block-3{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid black;
+            height: 200px;
+            width: 200px;
+            margin: 100px auto;
+        }
+        .block-4{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid black;
+            height: 150px;
+            width: 60px;
+            margin: 100px auto;
+        }
+    </style>
+</head>
+<body>
+<button onclick="reset();PreorderTravel(node);console.log(node);show(nodeList);">先序</button>
+<button onclick="reset();InorderTravel(node);show(nodeList);">中序</button>
+<button onclick="reset();PostorderTravel(node);show(nodeList);">后序</button>
+<div class="block-1">
+    <div class="block-2">
+        <div class="block-3">
+            <div class="block-4">
+            </div>
+            <div class="block-4">
+            </div>
+        </div>
+        <div class="block-3">
+            <div class="block-4">
+            </div>
+            <div class="block-4">
+            </div>
+        </div>
+    </div>
+    <div class="block-2">
+        <div class="block-3">
+            <div class="block-4">
+            </div>
+            <div class="block-4">
+            </div>
+        </div>
+        <div class="block-3">
+            <div class="block-4">
+            </div>
+            <div class="block-4">
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    /**
+     * 更改了实现方法，确实好用很多 ^。^
+     * */
+    var node = document.getElementsByClassName('block-1')[0];
+    var nodeList = [];
+    var handle;
+    function PreorderTravel( node ){
+        nodeList.push(node);
+        if(node.firstElementChild){
+            PreorderTravel(node.firstElementChild);
+        }
+        if(node.lastElementChild){
+            PreorderTravel(node.lastElementChild);
+        }
+    }
+    function InorderTravel( node ){
+        if(node.firstElementChild){
+            InorderTravel(node.firstElementChild);
+        }
+        nodeList.push(node);
+        if(node.lastElementChild){
+            InorderTravel(node.lastElementChild);
+        }
+    }
+    function PostorderTravel( node ){
+        if(node.firstElementChild){
+            PostorderTravel(node.firstElementChild);
+        }
+        if(node.lastElementChild){
+            PostorderTravel(node.lastElementChild);
+        }
+        nodeList.push(node);
+    }
+    function show( arr ){
+        console.log(arr);
+        var i = 0;
+        arr[i].style.backgroundColor = 'blue';
+        handle = setInterval(function(){
+            i++;
+            if( i < arr.length ){
+                arr[i-1].style.backgroundColor =  'white';
+                arr[i].style.backgroundColor = 'blue';
+            } else{
+                clearInterval( handle );
+                arr[i-1].style.backgroundColor = 'white';
+            }
+        }, 1000);
+    }
+    function reset(){
+        var div = document.getElementsByTagName('div');
+        nodeList = [];
+        clearInterval(handle);
+        for( var i=0; i<div.length; i++ ){
+            div[i].style.backgroundColor = 'white';
+        }
+    }
+</script>
+</body>
+</html>
