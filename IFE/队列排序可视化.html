@@ -9,7 +9,8 @@
     </style>
 </head>
 <body>
-<input id="input" placeholder="输入数据" />&nbsp;<button id="lIn">左侧入</button><button id="rIn">右侧入</button>&nbsp;<button id="lOut">左侧出</button><button id="rOut">右侧出</button>&nbsp;<button id="sort">排序</button>
+<input id="input" placeholder="数据范围(10~100)" />&nbsp;<button id="lIn">左侧入</button><button id="rIn">右侧入</button>&nbsp;<button id="lOut">左侧出</button><button id="rOut">右侧出</button>&nbsp;<button id="sort">排序</button>
+<div>50~99的数据会有更好的体验</div>
 <div id="ele">
 
 </div><br />
@@ -85,7 +86,7 @@
             getEle.getId('ele');
             getEle.ele.innerHTML = '';
             for( var i=0; i<this.queue.length; i++ ){
-                getEle.ele.innerHTML += '<span style="height:'+ this.queue[i] +'px">' + this.queue[i] + '</span>';
+                getEle.ele.innerHTML += '<span style="height:'+ this.queue[i] +'px;line-height:'+this.queue[i]+'px;">' + this.queue[i] + '</span>';
             }
         },
         sort: function(){
