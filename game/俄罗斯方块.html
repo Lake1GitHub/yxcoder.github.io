@@ -3,13 +3,74 @@
 <head>
     <meta charset="UTF-8" />
     <style>
-
+    *{
+        margin: 0;
+        padding: 0;
+    }
+    .gamePanel span{
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        font-size: 0;
+        margin-top: 0;
+    }
+    .panel{
+        background-color: black;
+    }
+    .block{
+        background-color: red;
+    }
+    .heap{
+        background-color: gray;
+    }
+    .gamePanel{
+        display: inline-block;
+        font-size: 0;
+        position: relative;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .gameTitle{
+        margin-top: 10px;
+        font-size: 36px;
+        text-align: center;
+    }
+    .newGame{
+        font-size: 24px;
+        margin: 5px;
+        text-align: center;
+    }
+    .newGame button{
+        font-size: 24px;
+        background-color: lightgray;
+        border: 2px solid gray;
+        padding: 10px 20px;
+        cursor: pointer;
+    }
+    .scoreShow{
+        text-align: center;
+        font-size: 24px;
+    }
+    .maxScore{
+        margin-left: 100px;
+    }
     </style>
 </head>
 <body>
-
+    <div class='gameTitle'> 俄罗斯方块 </div>
+    <div class='newGame'>
+        <button onclick='block.init()'>New Game</button>
+    </div>
+    <div class='scoreShow'>
+        <span class='currentScore'>score: <span>0</span></span>
+        <span class='maxScore'>maxScore: <span>0</span></span>
+    </div>
+    <div class='gamePanel'>
+    </div>
 <script>
-    function $(el){
+    'use strict';
+    let timeHandle;
+    let $ = function(el){
         return document.querySelector(el);
     }
     function addEvent(ele, handle, fn){
@@ -19,24 +80,11 @@
             ele.attachEvent('on' + handle, fn);
         }
     }
-    'use strict';
+    const XSIZE = 18;
+    const YSIZE = 16;
     let block = {
+        el: null,
         gamePanel: [
-            [-1, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -1],
-            [-1, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -1],
-            [-1, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -1],
-            [-1, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -1],
-            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //4
-            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //5
-            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //6
-            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //7
-            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //8
-            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //9
-            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //10
-            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //11
-            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //12
-            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],                                      //13
-            [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         ],
         currentBlock: {
             shape: 'I',
@@ -44,24 +92,122 @@
             posX: 0,
             posY: 0,
         },
+        // S,Z,I,O,L,J,T
+        shapeHash: ['S', 'Z', 'I', 'O', 'L', 'J', 'T'],
         speed: 1,
-        score: 0,
+        currentScore: 0,
+        maxScore: 0,
+        isOver: true,
+        xSize: XSIZE,
+        ySize: YSIZE,
+        init(){
+            if(timeHandle){
+                clearTimeout(timeHandle);
+            }
+            let self = this,
+                panel = this.gamePanel,
+                xSize = this.xSize,
+                ySize = this.ySize,
+                width;
+            this.el = $('.gamePanel');
+            this.el.innerHTML = '';
+            this.isOver = false;
+            this.gamePanel = [];
+            this.maxScore = localStorage['maxScore']?+localStorage['maxScore']:0;
+            $('.maxScore span').innerText = this.maxScore;
+            for(let i = 0; i<xSize; i++){
+                this.gamePanel.push(new Array(ySize));
+            }
+            for(let i = 0; i<xSize-1; i++){
+                for(let j = 1; j<ySize-1; j++){
+                    this.gamePanel[i][j] = 0;
+                }
+            }
+            for(let i = 0; i<xSize; i++){
+                this.gamePanel[i][0] = -1;
+                this.gamePanel[i][ySize-1] = -1;
+            }
+            for(let i = 0; i<ySize-1; i++){
+                this.gamePanel[xSize-1][i] = -1;
+            }
+            for(let i = 4; i<=xSize-2; i++){
+                let div = document.createElement('div');
+                this.el.appendChild(div);
+                for(let j = 1; j<=ySize-2; j++){
+                    let span = document.createElement('span');
+                    span.className = 'panel';
+                    div.appendChild(span);
+                }
+            }
+            this.createBlock();
+            this.nextTick();
+        },
+        clearPanel(){
+            let self = this,
+                xSize = this.xSize,
+                ySize = this.ySize;
+            clearTimeout(timeHandle);
+            timeHandle = null;
+            this.currentBlock = {
+                shape: 'I',
+                state: 1,
+                posX: 0,
+                posY: 0
+            }
+            for(let i = 0; i<=xSize-2; i++){
+                for(let j = 1; j<=ySize-2; j++){
+                    this.gamePanel[i][j] = 0;
+                }
+            }
+        },
         move(direct){
+            let
+                self = this,
+                panel = this.gamePanel,
+                block1 = this.getBlockDetail()['b1'],
+                block2 = this.getBlockDetail()['b2'],
+                block3 = this.getBlockDetail()['b3'],
+                block4 = this.getBlockDetail()['b4'],
+                xSize = this.xSize,
+                ySize = this.ySize;
+            if(this.isOver)
+                return;
             if(direct === 'up'){
                 this.change();
             } else{
                 if(direct === 'left'){
-                    this.currentBlock.posX--;
-                    if(this.validate())
-                        this.render();
+                    this.blockReset();
+                    this.currentBlock.posY--;
+                    if(this.validate()){
+                        this.blockShow();
+                    }
+                    else{
+                        this.currentBlock.posY++;
+                        this.blockShow();
+                    }
+                    this.render();
                 } else if(direct === 'right'){
-                    this.currentBlock.posX++;
-                    if(this.validate())
-                        this.render();
-                } else if(direct === 'bottom'){
+                    this.blockReset();
                     this.currentBlock.posY++;
-                    if(this.validate())
-                        this.render();
+                    if(this.validate()){
+                        this.blockShow();
+                    }
+                    else{
+                        this.currentBlock.posY--;
+                        this.blockShow();
+                    }
+                    this.render();
+                } else if(direct === 'down'){
+                    this.blockReset();
+                    this.currentBlock.posX++;
+                    if(this.validate()){
+                        this.blockShow();
+                    }
+                    else{
+                        this.currentBlock.posX--;
+                        this.blockShow();
+                    }
+                    this.render();
                 }
             }
         },
@@ -71,10 +217,19 @@
                 block1 = this.getBlockDetail()['b1'],
                 block2 = this.getBlockDetail()['b2'],
                 block3 = this.getBlockDetail()['b3'],
-                block4 = this.getBlockDetail()['b4'];
+                block4 = this.getBlockDetail()['b4'],
+                xSize = this.xSize,
+                ySize = this.ySize;
             // 如果有一个 block所在的点不为 0，则验证不通过
-            return !(panel[block1.x][block1.y] || panel[block2.x][block2.y] || panel[block3.x][block3.y] || panel[block4.x][block4.y]);
+            if(panel[block1.x][block1.y]===-1 || panel[block2.x][block2.y]===-1 || panel[block3.x][block3.y]===-1 || panel[block4.x][block4.y]===-1){
+                return false;
+            }
+            else if(panel[block1.x][block1.y]===2 || panel[block2.x][block2.y]===2 || panel[block3.x][block3.y]===2 || panel[block4.x][block4.y]===2){
+                return false;
+            }
+            return true;
         },
+        // 7种形状 S,Z,I,O,L,J,T
         getBlockDetail(){
             let block = this.currentBlock,
                 block1 = { x: block.posX, y: block.posY },
@@ -83,37 +238,39 @@
                 block3 = JSON.parse(str),
                 block4 = JSON.parse(str),
                 shape = block.shape,
-                state = block.state;
+                state = block.state,
+                xSize = this.xSize,
+                ySize = this.ySize;
             // 各种不同形状的处理
-            if(shape==='S'){
+            if(shape==='Z'){
                 if(state===1){
                     block1.y++;
                     block2.y++;
                     block2.x++;
-                    block3.x+=2;
-                    block4.x+=3;
+                    block3.x++;
+                    block4.x+=2;
                 }
                 else{
                     block2.y++;
                     block3.x++;
-                    block3.y+=2;
+                    block3.y++;
                     block4.x++;
-                    block4.y+=3;
+                    block4.y+=2;
                 }
             }
-            else if(shape==='Z'){
+            else if(shape==='S'){
                 if(state===1){
                     block2.x++;
-                    block3.x+=2;
+                    block3.x++;
                     block3.y++;
-                    block4.x+=3;
+                    block4.x+=2;
                     block4.y++;
                 } else{
                     block1.x++;
                     block2.x++;
                     block2.y++;
-                    block3.y+=2;
-                    block4.y+=3;
+                    block3.y++;
+                    block4.y+=2;
                 }
             }
             else if( shape=== 'I'){
@@ -122,16 +279,16 @@
                     block3.y+=2;
                     block4.y+=3;
                 } else {
-                    block.x++;
-                    block.x+=2;
-                    block.x+=3;
+                    block2.x++;
+                    block3.x+=2;
+                    block4.x+=3;
                 }
             } else if(shape==='O'){
                 block2.x++;
                 block3.y++;
                 block4.x++;
                 block4.y++;
-            } else if(shape==='L'){
+            } else if(shape==='J'){
                 if(state===1){
                     block2.y++;
                     block3.y += 2;
@@ -155,7 +312,7 @@
                     block4.x+=2;
                     block4.y++;
                 }
-            } else if(shape==='J'){
+            } else if(shape==='L'){
                 if(state===1){
                     block1.x++;
                     block2.x++;
@@ -213,39 +370,102 @@
                 'b4': block4
             }
         },
-        nextTick(){
+        nextTick: function(){
             let
+                self = this,
+                panel = this.gamePanel,
+                block1 = this.getBlockDetail()['b1'],
+                block2 = this.getBlockDetail()['b2'],
+                block3 = this.getBlockDetail()['b3'],
+                block4 = this.getBlockDetail()['b4'],
+                xSize = this.xSize,
+                ySize = this.ySize;
+            if( panel[block1.x+1][block1.y]===-1 || panel[block2.x+1][block2.y]===-1 || panel[block3.x+1][block3.y]===-1 || panel[block4.x+1][block4.y]===-1 ){
+                if(this.eliminate())
+                    this.createBlock();
+            } else if( panel[block1.x+1][block1.y]===2 || panel[block2.x+1][block2.y]===2 || panel[block3.x+1][block3.y]===2 || panel[block4.x+1][block4.y]===2 ){
+                if(this.eliminate())
+                    this.createBlock();
+            } else{
+                this.blockReset();
+                this.currentBlock.posX++;
+                this.blockShow();
+            }
+            this.blockShow();
+            this.render();
+            function a(){
+                self.nextTick();
+            }
+            if(!this.isOver){
+                timeHandle = setTimeout(a, 1000/this.speed);
+            }
+        },
+        blockShow(){
+            let
+                panel = this.gamePanel,
                 block1 = this.getBlockDetail()['b1'],
                 block2 = this.getBlockDetail()['b2'],
                 block3 = this.getBlockDetail()['b3'],
                 block4 = this.getBlockDetail()['b4'];
-            if(panel[block1.x][block1.y++] || panel[block2.x][block2.y++] || panel[block3.x][block3.y++] || panel[block4.x][block4.y++]){
-                this.eliminate();
-                this.createBlock();
-            }
-            this.render();
-            setTimeout(this.nextTick(), 1000/this.speed);
+            this.gamePanel[block1.x][block1.y] = 1;
+            this.gamePanel[block2.x][block2.y] = 1;
+            this.gamePanel[block3.x][block3.y] = 1;
+            this.gamePanel[block4.x][block4.y] = 1;
+        },
+        blockReset(){
+            let
+                panel = this.gamePanel,
+                block1 = this.getBlockDetail()['b1'],
+                block2 = this.getBlockDetail()['b2'],
+                block3 = this.getBlockDetail()['b3'],
+                block4 = this.getBlockDetail()['b4'];
+            this.gamePanel[block1.x][block1.y] = 0;
+            this.gamePanel[block2.x][block2.y] = 0;
+            this.gamePanel[block3.x][block3.y] = 0;
+            this.gamePanel[block4.x][block4.y] = 0;
         },
         createBlock(){
-
+            let
+                ySize = this.ySize,
+                position = Math.floor(Math.random()*(ySize-5)+1),
+                shape = this.shapeHash[Math.floor(Math.random()*7+1)-1],
+                state = 1,
+                currentBlock = this.currentBlock;
+            currentBlock.shape = shape;
+            currentBlock.state = state;
+            currentBlock.posX = 0;
+            currentBlock.posY = position;
         },
         eliminate(){
             let record;
-            for(let i = 13; i>=4; i--){
+            let
+                xSize = this.xSize,
+                ySize = this.ySize,
+                count = 0,
+                panel = this.gamePanel,
+                block1 = this.getBlockDetail()['b1'],
+                block2 = this.getBlockDetail()['b2'],
+                block3 = this.getBlockDetail()['b3'],
+                block4 = this.getBlockDetail()['b4'];
+            panel[block1.x][block1.y] = 2;
+            panel[block2.x][block2.y] = 2;
+            panel[block3.x][block3.y] = 2;
+            panel[block4.x][block4.y] = 2;
+            for(let i = xSize-2; i>=4; i--){
                 let isFull = true;
-                for(let j = 1; j<=10; j++){
+                for(let j = 1; j<=ySize-2; j++){
                     if(this.gamePanel[i][j]===0){
                         isFull = false;
                         break;
                     }
                 }
                 if(isFull){
-                    let count = 1;
                     let continuous = true;
                     record = i;
+                    // 最多消除4层
                     for(let i = record; i>=record-4; i--){
-                        for(let j = 1; j<=10; j++){
-                            count++;
+                        count++;
+                        for(let j = 1; j<=ySize-2; j++){
                             if(this.gamePanel[i][j]===0){
                                 count--;
                                 continuous= false;
@@ -255,22 +475,83 @@
                         if(!continuous)
                             break;
                     }
-                    
+                    // 由于消除必定连续，所以这里可以跳出循环了
+                    break;
                 }
+            }
+            // 自 record往上 count层都需要被消除，也就是将 record~record+count层被之上的层代替
+            // 这里可以有个优化，如果有一层全为 0，则直接跳出循环，但......没做
+            for(let i = record; i>=4; i--){
+                for(let j = 1; j<=ySize-2; j++){
+                    this.gamePanel[i][j] = this.gamePanel[i-count][j];
+                }
+            }
+            for(let i = 4; i<4+count; i++){
+                for(let j = 1; j<=ySize-2; j++){
+                    this.gamePanel[i][j] = 0;
+                }
+            }
+            for(let j = 1; j<=ySize-2; j++){
+                if(this.gamePanel[4][j]!==0){
+                    this.gameOver();
+                    return false;
+                }
+            }
+            this.getScore(count);
+            return true;
+        },
+        gameOver(){
+            alert('游戏结束');
+            this.clearPanel();
+            this.isOver = true;
+            if(this.currentScore > this.maxScore){
+                localStorage['maxScore'] = ''+this.currentScore;
+            }
+        },
+        getScore(count){
+            this.currentScore+=count*100;
+            $('.currentScore span').innerText = this.currentScore;
+            if(this.currentScore > this.maxScore){
+                $('.maxScore span').innerText = this.currentScore;
             }
         },
         change(){
+            this.blockReset();
             let
                 shape = this.currentBlock.shape,
-                state = this.currentBlock.state;
+                state = this.currentBlock.state,
+                originState = state;
             if(shape==='S'||shape==='Z'||shape==='I'){
-                this.currentBlock.shape = state%2+1;
+                this.currentBlock.state = state%2+1;
             } else{
-                this.currentBlock.shape = state%4+1;
+                this.currentBlock.state = state%4+1;
             }
+            if(!this.validate()){
+                this.currentBlock.state = originState;
+            }
+            this.blockShow();
+            this.render();
         },
         render(){
-
+            let
+                xSize = this.xSize,
+                ySize = this.ySize,
+                panel = this.gamePanel,
+                el = this.el,
+                children = el.children,
+                child;
+            for(let i = 4; i<=xSize-2; i++){
+                for(let j = 1; j<=ySize-2; j++){
+                    child = children[i-4].children[j-1];
+                    if(panel[i][j] === 0){
+                        child.className = 'panel';
+                    } else if(panel[i][j] === 1){
+                        child.className = 'block';
+                    } else if(panel[i][j] === 2){
+                        child.className = 'heap';
+                    }
+                }
+            }
         }
     };
     addEvent(window, 'keydown', function(event){
@@ -284,6 +565,7 @@
             block.move('right');
         }
     });
+    block.init();
 </script>
 </body>
 </html>
