@@ -113,6 +113,7 @@
             this.el.innerHTML = '';
             this.isOver = false;
             this.gamePanel = [];
+            this.currentScore = 0;
             this.maxScore = localStorage['maxScore']?+localStorage['maxScore']:0;
             $('.maxScore span').innerText = this.maxScore;
             for(let i = 0; i<xSize; i++){
