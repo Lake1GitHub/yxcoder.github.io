@@ -34,6 +34,7 @@
         margin-top: 10px;
         font-size: 36px;
         text-align: center;
+        font-weight: bold;
     }
     .newGame{
         font-size: 24px;
@@ -42,10 +43,13 @@
     }
     .newGame button{
         font-size: 24px;
-        background-color: lightgray;
+        background-color: rgb(144, 123, 102);
+        border-radius: 10px;
         border: 2px solid gray;
         padding: 10px 20px;
         cursor: pointer;
+        color: white;
+        outline: 0;
     }
     .scoreShow{
         text-align: center;
@@ -115,6 +119,7 @@
             this.gamePanel = [];
             this.currentScore = 0;
             this.maxScore = localStorage['maxScore']?+localStorage['maxScore']:0;
+            $('.currentScore span').innerText = this.currentScore;
             $('.maxScore span').innerText = this.maxScore;
             for(let i = 0; i<xSize; i++){
                 this.gamePanel.push(new Array(ySize));
