@@ -1,0 +1,1 @@
+{"version":3,"sources":["app.4c1c9f8ea76d0e275d4533bfe3b631f0.css"],"names":[],"mappings":"AACA,EAAG,SAAU,AAAC,SAAW,CACxB,AACD,KAAM,wBAAqC,CAC1C,AACD,KACI,iBAAmB,CACtB","file":"app.4c1c9f8ea76d0e275d4533bfe3b631f0.css","sourcesContent":["\n*{ margin: 0; padding: 0;\n}\n#app{ background-color: rgb(245, 245, 245);\n}\nhtml{\n    overflow-y: scroll;\n}\n"]}
